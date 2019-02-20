@@ -1,7 +1,9 @@
 package cli
 
 import (
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/lucab/exp-locksmith2/internal/daemon"
 	"github.com/sirupsen/logrus"
@@ -13,7 +15,11 @@ var (
 		Use:  "daemon",
 		RunE: runDaemon,
 	}
-	addr = "127.0.0.1:9999"
+	address        = "0.0.0.0"
+	port           = 9999
+	etcdURLs       = []string{"http://127.0.0.1:2379"}
+	lockTimeout    = 3 * time.Second
+	semaphoreSlots = uint64(1)
 )
 
 func init() {
@@ -21,9 +27,19 @@ func init() {
 }
 
 func runDaemon(cmd *cobra.Command, cmdArgs []string) error {
-	logrus.Info("starting daemon on ", addr)
+	listenAddr := fmt.Sprintf("%s:%d", address, port)
+	logrus.WithFields(logrus.Fields{
+		"address": address,
+		"port":    port,
+	}).Info("starting daemon")
 
-	http.HandleFunc("/v1/pre-reboot", daemon.PreReboot)
-	http.HandleFunc("/v1/steady-state", daemon.SteadyState)
-	return http.ListenAndServe(addr, nil)
+	serverConf := daemon.ServerConfig{
+		EtcdURLs:       etcdURLs,
+		LockTimeout:    lockTimeout,
+		SemaphoreSlots: semaphoreSlots,
+	}
+
+	http.Handle(daemon.PreRebootEndpoint, serverConf.PreReboot())
+	http.Handle(daemon.SteadyStateEndpoint, serverConf.SteadyState())
+	return http.ListenAndServe(listenAddr, nil)
 }

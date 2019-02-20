@@ -8,26 +8,19 @@ import (
 )
 
 var (
-	// ErrExist is the error returned if a holder with the specified id
-	// is already holding the semaphore
-	ErrExist = errors.New("holder exists")
-	// ErrNotExist is the error returned if there is no holder with the
-	// specified id holding the semaphore
-	ErrNotExist = errors.New("holder does not exist")
 	// ErrNilSemaphore is returned on nil semaphore.
 	ErrNilSemaphore = errors.New("nil Semaphore")
 )
 
 // Semaphore is a struct representation of the information held by the semaphore
 type Semaphore struct {
-	Semaphore uint64   `json:"semaphore"`
-	Max       uint64   `json:"max"`
-	Holders   []string `json:"holders"`
+	Max     uint64   `json:"max"`
+	Holders []string `json:"holders"`
 }
 
 // NewSemaphore returns a new empty semaphore.
-func NewSemaphore() (sem *Semaphore) {
-	return &Semaphore{1, 1, []string{}}
+func NewSemaphore(slots uint64) (sem *Semaphore) {
+	return &Semaphore{slots, []string{}}
 }
 
 // SetMax sets the maximum number of holders of the semaphore
@@ -36,17 +29,16 @@ func (s *Semaphore) SetMax(max uint64) error {
 		return ErrNilSemaphore
 	}
 
-	diff := s.Max - max
+	if int(max) < len(s.Holders) {
+		return fmt.Errorf("failed to set max to %d, %d current holders", max, len(s.Holders))
+	}
 
-	s.Semaphore = s.Semaphore - diff
-	s.Max = s.Max - diff
+	s.Max = max
 
 	return nil
 }
 
-// String returns a json representation of the semaphore
-// if there is an error when marshalling the json, it is ignored and the empty
-// string is returned.
+// String returns a json representation of the semaphore.
 func (s *Semaphore) String() (string, error) {
 	if s == nil {
 		return "", ErrNilSemaphore
@@ -61,10 +53,12 @@ func (s *Semaphore) String() (string, error) {
 }
 
 // addHolder adds a holder with id h to the list of holders in the semaphore
-// it returns ErrExist if the given id is in the list
 func (s *Semaphore) addHolder(h string) error {
 	if s == nil {
 		return ErrNilSemaphore
+	}
+	if len(s.Holders) >= int(s.Max) {
+		return fmt.Errorf("all %d semaphore slots currently locked", s.Max)
 	}
 
 	loc := sort.SearchStrings(s.Holders, h)
@@ -75,13 +69,12 @@ func (s *Semaphore) addHolder(h string) error {
 		s.Holders = append(s.Holders[:loc], append([]string{h}, s.Holders[loc:]...)...)
 	}
 
-	s.Semaphore = s.Semaphore - 1
 	return nil
 }
 
 // removeHolder removes a holder with id h from the list of holders in the
 // semaphore. It returns whether the holder was present in the list.
-func (s *Semaphore) removeHolder(h string) (bool, error) {
+func (s *Semaphore) removeHolderIfPresent(h string) (bool, error) {
 	if s == nil {
 		return false, ErrNilSemaphore
 	}
@@ -89,17 +82,15 @@ func (s *Semaphore) removeHolder(h string) (bool, error) {
 	loc := sort.SearchStrings(s.Holders, h)
 	if loc < len(s.Holders) && s.Holders[loc] == h {
 		s.Holders = append(s.Holders[:loc], s.Holders[loc+1:]...)
-		s.Semaphore = s.Semaphore + 1
 		return true, nil
 	}
 
 	return false, nil
 }
 
-// RecursiveLock adds a holder with id h to the semaphore
-// It adds the id h to the list of holders, returning ErrExist the id already
-// exists, then it subtracts one from the semaphore. If the semaphore is already
-// held by the maximum number of people it returns an error.
+// RecursiveLock adds a holder with id h to the semaphore,
+// or returns an error if the semaphore is already a maximum
+// capacity.
 func (s *Semaphore) RecursiveLock(id string) (bool, error) {
 	if s == nil {
 		return false, ErrNilSemaphore
@@ -111,10 +102,6 @@ func (s *Semaphore) RecursiveLock(id string) (bool, error) {
 		return true, nil
 	}
 
-	if s.Semaphore <= 0 {
-		return false, fmt.Errorf("semaphore is at %v", s.Semaphore)
-	}
-
 	if err := s.addHolder(id); err != nil {
 		return false, err
 	}
@@ -122,15 +109,13 @@ func (s *Semaphore) RecursiveLock(id string) (bool, error) {
 	return false, nil
 }
 
-// UnlockIfHeld removes a holder with id h from the semaphore
-// It removes the id h from the list of holders, returning ErrNotExist if the id
-// does not exist in the list, then adds one to the semaphore.
+// UnlockIfHeld removes a holder with id h from the semaphore, if present.
 func (s *Semaphore) UnlockIfHeld(h string) error {
 	if s == nil {
 		return ErrNilSemaphore
 	}
 
-	_, err := s.removeHolder(h)
+	_, err := s.removeHolderIfPresent(h)
 	if err != nil {
 		return err
 	}

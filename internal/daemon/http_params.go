@@ -15,9 +15,9 @@ type HttpParams struct {
 // Params contains client parameters for a remote lock
 // request.
 type Params struct {
-	CurrentVersion string `json:"current_version"`
+	CurrentVersion string `json:"current_version,omitempty"`
 	NodeUUID       string `json:"node_uuid"`
-	Group          string `json:"group"`
+	Group          string `json:"group,omitempty"`
 }
 
 // NodeIdentity contains validated client identity from

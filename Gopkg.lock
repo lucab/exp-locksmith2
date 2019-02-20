@@ -5,33 +5,13 @@
   name = "github.com/coreos/etcd"
   packages = [
     "auth/authpb",
-    "client",
     "etcdserver/api/v3rpc/rpctypes",
     "etcdserver/etcdserverpb",
     "mvcc/mvccpb",
-    "pkg/pathutil",
-    "pkg/srv",
-    "pkg/types",
-    "version"
+    "pkg/types"
   ]
   revision = "d57e8b8d97adfc4a6c224fe116714bf1a1f3beb9"
   version = "v3.3.12"
-
-[[projects]]
-  name = "github.com/coreos/go-semver"
-  packages = ["semver"]
-  revision = "8ab6407b697782a06568d4b7f1db25550ec2e4c6"
-  version = "v0.2.0"
-
-[[projects]]
-  name = "github.com/coreos/locksmith"
-  packages = [
-    "lock",
-    "pkg/machineid",
-    "version"
-  ]
-  revision = "c1eeae7709f3204038b91ed5c8bea7ba1292fc02"
-  version = "v0.6.2"
 
 [[projects]]
   name = "github.com/gogo/protobuf"
@@ -40,8 +20,8 @@
     "proto",
     "protoc-gen-gogo/descriptor"
   ]
-  revision = "4cbf7e384e768b4e01799441fdf2a706a5635ae7"
-  version = "v1.2.0"
+  revision = "ba06b47c162d49f2af050fb4c75bcbc86a159d5c"
+  version = "v1.2.1"
 
 [[projects]]
   name = "github.com/golang/protobuf"
@@ -86,17 +66,8 @@
   version = "v1.0.3"
 
 [[projects]]
-  name = "github.com/ugorji/go"
-  packages = ["codec"]
-  revision = "8fd0f8d918c8f0b52d0af210a812ba882cc31a1e"
-  version = "v1.1.2"
-
-[[projects]]
   name = "go.etcd.io/etcd"
-  packages = [
-    "client",
-    "clientv3"
-  ]
+  packages = ["clientv3"]
   revision = "d57e8b8d97adfc4a6c224fe116714bf1a1f3beb9"
   version = "v3.3.12"
 
@@ -104,7 +75,7 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "74369b46fc6756741c016591724fd1cb8e26845f"
+  revision = "a4c6cb3142f211c99e4bf4cd769535b29a9b616f"
 
 [[projects]]
   branch = "master"
@@ -127,7 +98,7 @@
     "unix",
     "windows"
   ]
-  revision = "983097b1a8a340cd1cc7df17d735154d89e10b1a"
+  revision = "629670e5acc5b3e069375d323404911dc8fe1d19"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -154,7 +125,7 @@
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "4b09977fb92221987e99d190c8f88f2c92727a29"
+  revision = "082222b4a5c572e33e82ee9162d1352c7cf38682"
 
 [[projects]]
   name = "google.golang.org/grpc"
@@ -198,6 +169,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8a173aeec2a62848051a48b727520d8c8c177f40457deaa363cbc6fd81fb0aaa"
+  inputs-digest = "98ad416e13d3b661e4ff697fce0f716e60782912cf3dfc9a8ad018d0cd94737f"
   solver-name = "gps-cdcl"
   solver-version = 1

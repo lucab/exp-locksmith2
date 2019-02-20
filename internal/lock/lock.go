@@ -6,13 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"time"
 
 	"go.etcd.io/etcd/clientv3"
 )
 
 const (
-	keyTemplate  = "/com.coreos.locksmith2/groups/%s/v1/semaphore"
+	keyTemplate  = "com.coreos.locksmith2/groups/%s/v1/semaphore"
 	defaultGroup = "default"
 )
 
@@ -28,11 +27,8 @@ type Manager struct {
 }
 
 // NewManager returns a new lock manager, ensuring the underlying semaphore is initialized.
-func NewManager(ctx context.Context, dialTimeout time.Duration, customGroup string) (*Manager, error) {
-	client, err := clientv3.New(clientv3.Config{
-		Endpoints:   []string{"localhost:2379"},
-		DialTimeout: dialTimeout,
-	})
+func NewManager(ctx context.Context, etcdURLs []string, customGroup string, slots uint64) (*Manager, error) {
+	client, err := clientv3.NewFromURL(etcdURLs[0])
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +41,7 @@ func NewManager(ctx context.Context, dialTimeout time.Duration, customGroup stri
 	keyPath := fmt.Sprintf(keyTemplate, group)
 	manager := Manager{client, keyPath}
 
-	if err := manager.ensureInit(ctx); err != nil {
+	if err := manager.ensureInit(ctx, slots); err != nil {
 		return nil, err
 	}
 
@@ -62,12 +58,12 @@ func (m *Manager) Close() {
 }
 
 // ensureInit initialize the semaphore in etcd, if it does not exist yet.
-func (m *Manager) ensureInit(ctx context.Context) error {
+func (m *Manager) ensureInit(ctx context.Context, slots uint64) error {
 	if m == nil {
 		return ErrNilManager
 	}
 
-	sem := NewSemaphore()
+	sem := NewSemaphore(slots)
 	semValue, err := sem.String()
 	if err != nil {
 		return err
@@ -176,8 +172,7 @@ func (m *Manager) RecursiveLock(ctx context.Context, id string) error {
 }
 
 // UnlockIfHeld removes this lock id as a holder of the semaphore
-// it returns an error if there is a problem getting or setting the semaphore,
-// or if this lock is not locked.
+// it returns an error if there is a problem getting or setting the semaphore.
 func (m *Manager) UnlockIfHeld(ctx context.Context, id string) error {
 	sem, version, err := m.get(ctx)
 	if err != nil {
