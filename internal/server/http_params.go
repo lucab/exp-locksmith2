@@ -1,4 +1,4 @@
-package daemon
+package server
 
 import (
 	"encoding/json"
@@ -6,9 +6,9 @@ import (
 	"net/http"
 )
 
-// HttpParams contains all parameters for a remote lock
+// HTTPParams contains all parameters for a remote lock
 // request.
-type HttpParams struct {
+type HTTPParams struct {
 	ClientParams Params `json:"client_params"`
 }
 
@@ -32,7 +32,7 @@ func validateIdentity(req *http.Request) (*NodeIdentity, error) {
 	var nodeID string
 
 	decoder := json.NewDecoder(req.Body)
-	var input HttpParams
+	var input HTTPParams
 	if err := decoder.Decode(&input); err != nil {
 		return nil, err
 	}

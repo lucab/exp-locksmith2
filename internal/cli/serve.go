@@ -5,15 +5,15 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/lucab/exp-locksmith2/internal/daemon"
+	"github.com/lucab/exp-locksmith2/internal/server"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
 var (
-	cmdDaemon = &cobra.Command{
-		Use:  "daemon",
-		RunE: runDaemon,
+	cmdServe = &cobra.Command{
+		Use:  "serve",
+		RunE: runServe,
 	}
 	address        = "0.0.0.0"
 	port           = 9999
@@ -23,23 +23,23 @@ var (
 )
 
 func init() {
-	locksmith2Cmd.AddCommand(cmdDaemon)
+	locksmith2Cmd.AddCommand(cmdServe)
 }
 
-func runDaemon(cmd *cobra.Command, cmdArgs []string) error {
+func runServe(cmd *cobra.Command, cmdArgs []string) error {
 	listenAddr := fmt.Sprintf("%s:%d", address, port)
 	logrus.WithFields(logrus.Fields{
 		"address": address,
 		"port":    port,
-	}).Info("starting daemon")
+	}).Info("starting service")
 
-	serverConf := daemon.ServerConfig{
+	config := server.ServerConfig{
 		EtcdURLs:       etcdURLs,
 		LockTimeout:    lockTimeout,
 		SemaphoreSlots: semaphoreSlots,
 	}
 
-	http.Handle(daemon.PreRebootEndpoint, serverConf.PreReboot())
-	http.Handle(daemon.SteadyStateEndpoint, serverConf.SteadyState())
+	http.Handle(server.PreRebootEndpoint, config.PreReboot())
+	http.Handle(server.SteadyStateEndpoint, config.SteadyState())
 	return http.ListenAndServe(listenAddr, nil)
 }

@@ -1,4 +1,4 @@
-package daemon
+package server
 
 import (
 	"context"
@@ -16,12 +16,11 @@ const (
 // PreReboot is the handler for the `/v1/pre-reboot` endpoint.
 func (sc *ServerConfig) PreReboot() http.Handler {
 	handler := func(w http.ResponseWriter, req *http.Request) {
+		logrus.Debug("got pre-reboot request")
 		if sc == nil {
 			http.Error(w, errNilServerConfig.Error(), 500)
 			return
 		}
-
-		logrus.Debug("got pre-reboot request")
 
 		nodeIdentity, err := validateIdentity(req)
 		if err != nil {
@@ -29,6 +28,10 @@ func (sc *ServerConfig) PreReboot() http.Handler {
 			http.Error(w, err.Error(), 400)
 			return
 		}
+		logrus.WithFields(logrus.Fields{
+			"group": nodeIdentity.Group,
+			"UUID":  nodeIdentity.UUID,
+		}).Debug("processing client pre-reboot request")
 
 		ctx, cancel := context.WithTimeout(context.Background(), sc.LockTimeout)
 		defer cancel()

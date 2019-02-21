@@ -1,4 +1,4 @@
-package daemon
+package server
 
 import (
 	"context"
@@ -16,18 +16,22 @@ const (
 // SteadyState is the handler for the `/v1/steady-state` endpoint.
 func (sc *ServerConfig) SteadyState() http.Handler {
 	handler := func(w http.ResponseWriter, req *http.Request) {
+		logrus.Debug("got steady-state report")
 		if sc == nil {
 			http.Error(w, errNilServerConfig.Error(), 500)
 			return
 		}
 
-		logrus.Debug("got steady-state report")
 		nodeIdentity, err := validateIdentity(req)
 		if err != nil {
 			logrus.Errorln("failed to validate client identity: ", err)
 			http.Error(w, err.Error(), 400)
 			return
 		}
+		logrus.WithFields(logrus.Fields{
+			"group": nodeIdentity.Group,
+			"UUID":  nodeIdentity.UUID,
+		}).Debug("processing client steady-state report")
 
 		ctx, cancel := context.WithTimeout(context.Background(), sc.LockTimeout)
 		defer cancel()

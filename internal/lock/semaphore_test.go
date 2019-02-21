@@ -8,8 +8,8 @@ import (
 func TestSingleLock(t *testing.T) {
 	sem := NewSemaphore(1)
 
-	if sem.Max != 1 {
-		t.Errorf("unexpected semaphore size: %d", sem.Max)
+	if sem.TotalSlots != 1 {
+		t.Errorf("unexpected semaphore size: %d", sem.TotalSlots)
 	}
 
 	held, err := sem.RecursiveLock("a")
@@ -22,8 +22,8 @@ func TestSingleLock(t *testing.T) {
 	if !reflect.DeepEqual(sem.Holders, []string{"a"}) {
 		t.Error("lock did not add a to the holders")
 	}
-	if sem.Max != 1 {
-		t.Errorf("unexpected semaphore size: %d", sem.Max)
+	if sem.TotalSlots != 1 {
+		t.Errorf("unexpected semaphore size: %d", sem.TotalSlots)
 	}
 
 	if err := sem.UnlockIfHeld("a"); err != nil {
@@ -32,8 +32,8 @@ func TestSingleLock(t *testing.T) {
 	if len(sem.Holders) != 0 {
 		t.Error("lock did not remove a from the holders")
 	}
-	if sem.Max != 1 {
-		t.Errorf("unexpected semaphore size: %d", sem.Max)
+	if sem.TotalSlots != 1 {
+		t.Errorf("unexpected semaphore size: %d", sem.TotalSlots)
 	}
 }
 
@@ -85,17 +85,17 @@ func TestHolderOrdering(t *testing.T) {
 	}
 }
 
-func TestSetMax(t *testing.T) {
-	oldMax := uint64(1)
-	newMax := uint64(4)
-	sem := NewSemaphore(oldMax)
+func TestSetTotalSlots(t *testing.T) {
+	oldTotalSlots := uint64(1)
+	newTotalSlots := uint64(4)
+	sem := NewSemaphore(oldTotalSlots)
 
-	if err := sem.SetMax(newMax); err != nil {
+	if err := sem.SetTotalSlots(newTotalSlots); err != nil {
 		t.Error(err)
 	}
 
-	if sem.Max != newMax {
-		t.Errorf("unexpected semaphore size: got %d, expectedd %d", sem.Max, newMax)
+	if sem.TotalSlots != newTotalSlots {
+		t.Errorf("unexpected semaphore size: got %d, expectedd %d", sem.TotalSlots, newTotalSlots)
 
 	}
 }

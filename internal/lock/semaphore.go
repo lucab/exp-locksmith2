@@ -14,8 +14,8 @@ var (
 
 // Semaphore is a struct representation of the information held by the semaphore
 type Semaphore struct {
-	Max     uint64   `json:"max"`
-	Holders []string `json:"holders"`
+	TotalSlots uint64   `json:"total_slots"`
+	Holders    []string `json:"holders"`
 }
 
 // NewSemaphore returns a new empty semaphore.
@@ -23,17 +23,17 @@ func NewSemaphore(slots uint64) (sem *Semaphore) {
 	return &Semaphore{slots, []string{}}
 }
 
-// SetMax sets the maximum number of holders of the semaphore
-func (s *Semaphore) SetMax(max uint64) error {
+// SetTotalSlots sets the number of holders slots for the semaphore
+func (s *Semaphore) SetTotalSlots(slots uint64) error {
 	if s == nil {
 		return ErrNilSemaphore
 	}
 
-	if int(max) < len(s.Holders) {
-		return fmt.Errorf("failed to set max to %d, %d current holders", max, len(s.Holders))
+	if int(slots) < len(s.Holders) {
+		return fmt.Errorf("failed to set max to %d, %d current holders", slots, len(s.Holders))
 	}
 
-	s.Max = max
+	s.TotalSlots = slots
 
 	return nil
 }
@@ -57,8 +57,8 @@ func (s *Semaphore) addHolder(h string) error {
 	if s == nil {
 		return ErrNilSemaphore
 	}
-	if len(s.Holders) >= int(s.Max) {
-		return fmt.Errorf("all %d semaphore slots currently locked", s.Max)
+	if len(s.Holders) >= int(s.TotalSlots) {
+		return fmt.Errorf("all %d semaphore slots currently locked", s.TotalSlots)
 	}
 
 	loc := sort.SearchStrings(s.Holders, h)
